@@ -1,215 +1,130 @@
-#include <stdio.h> 
-#include <stdlib.h>
+# Assembly Virtual Simplificado 🖥️
 
-#define byte unsigned char
+## Descrição do Projeto 📘
+Este programa em **C** implementa um **interpretador de Assembly** simplificado. Ele simula a execução de instruções em uma arquitetura hipotética, utilizando um acumulador (*ACC*), memória e um contador de programa (*PC*).  
 
-void jmp(int operando, int *pnt);	// 12 desvio incondicional
-void accStat(int acc, int *statPnt, int operação);	//Função flags
+O programa lê instruções de um **arquivo binário** contendo opcodes e operandos, executa os comandos e retorna o estado final do acumulador e das flags (*Overflow, Carry e Zero*).
 
-struct INSTRUCTION{ //Struct para armazenar os comandos lidos no arquivo
-	byte opcode;
-	byte operand;
-};
-typedef struct INSTRUCTION inst; 
+---
 
-int main(){
-	
-	//Declarações de variáveis
-	int acc = 0;
-	int pc = 0;
-	int stat = 1;
-	int i = 0;
-	inst programa[256] = {0};
-	int memoria[256] = {0};
-	short instruction;
-	int *statPnt;
-	int *pcPnt;
-	int o = 0, c = 0, z = 0;
+## Funcionalidades 🔧
+1. **Leitura de arquivo binário**: Interpreta opcodes e operandos armazenados.
+2. **Execução de instruções Assembly**:
+   - Operações aritméticas: `ADD`, `SUB`, `MUL`, `DIV`, `INC`, `DEC`.
+   - Operações lógicas: `AND`, `OR`, `NOT`.
+   - Controle de fluxo: `JMP`, `JZ`, `JG`, `JL`, etc.
+   - Carregamento e armazenamento: `LOAD_M`, `LOAD_V`, `STORE`.
+3. **Flags**:
+   - **O (Overflow)**: Resultado fora do intervalo permitido.
+   - **C (Carry)**: Indica a necessidade de "carry" para soma/subtração.
+   - **Z (Zero)**: Acumulador igual a zero.
+4. **Parada do programa**: Instrução `HLT` finaliza a execução.
 
-	pcPnt = &pc;
-	statPnt = &stat;
+---
 
-	FILE  * file = fopen("programa.exe", "rb"); //abertura do arquivo binário
+## Estrutura das Instruções 🗂️
+Cada instrução é formada por:
+- **Opcode** (8 bits): Código da operação.
+- **Operando** (8 bits): Endereço ou valor imediato.
 
-	while(fread(&instruction, 2, 1, file) != 0) //leitura do arquivo binário
-	{
-		programa[i].opcode = instruction & 0xFF; //armanazena os comandos no vetor struct
-		programa[i].operand = instruction >> 8;
+| Opcode | Instrução | Descrição                           |
+|--------|-----------|-------------------------------------|
+| 0      | LOAD_M    | Carrega valor da memória no ACC.    |
+| 1      | LOAD_V    | Carrega valor imediato no ACC.      |
+| 2      | STORE     | Armazena valor do ACC na memória.   |
+| 3      | ADD       | Soma valor da memória ao ACC.       |
+| 4      | SUB       | Subtrai valor da memória do ACC.    |
+| 5      | MUL       | Multiplica valor da memória pelo ACC.|
+| 6      | DIV       | Divide ACC pelo valor da memória.   |
+| 7      | INC       | Incrementa ACC.                    |
+| 8      | DEC       | Decrementa ACC.                    |
+| 9      | AND       | Operação lógica AND com memória.    |
+| 10     | OR        | Operação lógica OR com memória.     |
+| 11     | NOT       | Operação lógica NOT no ACC.         |
+| 12     | JMP       | Desvio incondicional.               |
+| 13     | JZ        | Desvio se ACC == 0.                 |
+| 14     | JNZ       | Desvio se ACC != 0.                 |
+| 15     | JG        | Desvio se ACC > 0.                  |
+| 16     | JL        | Desvio se ACC < 0.                  |
+| 17     | JGE       | Desvio se ACC >= 0.                 |
+| 18     | JLE       | Desvio se ACC <= 0.                 |
+| 19     | HLT       | Encerra a execução do programa.     |
 
-		//printf("%.2X %.2X\n", programa[i].opcode, programa[i].operand); //print para confirmação se a leitura está certa
-		i++;
-	}
+---
 
-	while(1)
-	{ 
-		//printf("pc: %i ", pc);
-		//printf("\nopcode: %X ", programa[pc].opcode);
-		//printf("\noperando: %i\n", programa[pc].operand);
-		switch (programa[pc].opcode)
-		{
-			;
-			case 0: //LOAD_M
-				acc = memoria[programa[pc].operand];
-				accStat(acc, statPnt, 2); //verificação de flags
-				pc++;
-				break;
+## Compilação e Execução ▶️
 
-			case 1: //LOAD_V
-				acc = programa[pc].operand;
-				accStat(acc, statPnt, 2);
-				pc++;
-				break;
+### Pré-requisitos
+- **Sistema operacional**: Linux, Windows ou MacOS.
+- **Compilador**: `gcc`.
 
-			case 2: // STORE
-				memoria[programa[pc].operand] = acc;
-				pc++;
-				break;
+### Compilação
+Para compilar o programa, utilize o comando:
 
-			case 3: // ADD
-				acc = acc + memoria[programa[pc].operand];
-				accStat(acc, statPnt, 0);
-				pc++;
-				break;
+```bash
+gcc -o assembly_virtual assembly_virtual.c
+```
 
-			case 4: // SUB 
-				acc = acc - memoria[programa[pc].operand];
-				accStat(acc, statPnt, 0);
-				pc++;
-				break;
+### Execução
+O programa espera um arquivo binário chamado **programa.exe** contendo as instruções. Execute com:
 
-			case 5: // MUL
-				acc = acc * memoria[programa[pc].operand];
-				accStat(acc, statPnt, 2);
-				pc++;
-				break;
+```bash
+./assembly_virtual
+```
 
-			case 6: //DIV
-				acc = acc / memoria[programa[pc].operand];
-				accStat(acc, statPnt, 2);
-				pc++;
-				break;
+---
 
-			case 7: // INC
-				acc++;
-				accStat(acc, statPnt, 0);
-				pc++;
-				break;
+## Formato do Arquivo Binário 📄
+O arquivo de entrada **programa.exe** contém as instruções no formato binário (2 bytes por instrução):
+- **Byte 1**: Opcode.
+- **Byte 2**: Operando (valor ou endereço).
 
-			case 8: // DEC
-				acc--;
-				accStat(acc, statPnt,0);
-				pc++;
-				break;
+### Exemplo:
+| Byte 1 (Opcode) | Byte 2 (Operando) | Descrição         |
+|-----------------|------------------|------------------|
+| `01`           | `0A`             | LOAD_V 10        |
+| `03`           | `05`             | ADD [Mem[5]]     |
+| `12`           | `04`             | JMP para endereço 4 |
 
-			case 9: // AND
-				acc = acc & memoria[programa[pc].operand];
-				accStat(acc, statPnt, 0);
-				pc++;
-				break;
+---
 
-			case 10: // OR
-				acc = acc | memoria[programa[pc].operand];
-				accStat(acc, statPnt, 0);
-				pc++;
-				break;
+## Exemplo de Saída 💻
+Entrada (programa.exe com instruções):
+```
+01 0A   ; LOAD_V 10
+03 00   ; ADD Mem[0]
+07      ; INC
+19      ; HLT
+```
 
-			case 11: // NOT
-				acc = ~(acc);
-				accStat(acc, statPnt, 0);
-				pc++;
-				break;
+Saída esperada:
+```
+ACC: 11
+STAT: xxxxx001   ; Apenas flag Z está ativa
+```
 
-			case 12: // JMP
-				jmp(programa[pc].operand, pcPnt);
-				break;
+---
 
-			case 13: // JZ
-				if(acc == 0)
-				{ 
-					jmp(programa[pc].operand, pcPnt);
-					break;
-				}
-				pc++;
-				break;
+## Funções Principais 🛠️
+1. **jmp**: Atualiza o contador de programa (*PC*) para um endereço específico.
+   ```c
+   void jmp(int operando, int *pnt) {
+       *pnt = operando++/2;
+   }
+   ```
 
-			case 14: // JNZ
-				if(acc != 0)
-				{ 	
-					jmp(programa[pc].operand, pcPnt);
-					break;
-				}
-				pc++;
-				break;
+2. **accStat**: Atualiza as **flags** `O`, `C` e `Z` com base no valor do acumulador.
+   ```c
+   void accStat(int acc, int *statPnt, int operação) { 
+       *statPnt = 0;	
+       if(acc == 0) *statPnt = 1;
+       if((acc > 255) || (acc < -256)) *statPnt = operação + 2;
+   }
+   ```
 
-			case 15: // JG
-				if(acc > 0)
-				{ 
-					jmp(programa[pc].operand, pcPnt);
-					break;
-				}
-				pc++;
-				break;
+---
 
-			case 16: // JL
-				if(acc < 0)
-				{ 
-					jmp(programa[pc].operand, pcPnt);
-					break;
-				}
-				pc++;
-				break;
-
-			case 17: // JGE
-				if(acc >= 0)
-				{ 
-					jmp(programa[pc].operand, pcPnt);
-					break;
-				}
-				pc++;
-				break;
-
-			case 18: // JLE
-				if(acc <= 0)
-				{ 
-					jmp(programa[pc].operand, pcPnt);
-					break;
-				}
-				pc++;
-				break;
-
-			case 19: // HLT - sai do switch e para o loop while, fechando a execução do programa 
-				printf("\nACC: %i\n", acc); //Retorna o acumulador
-				if(stat==1) {z = 1;}
-				if(stat==2) {c = 1;}
-				if(stat==4) {o = 1;}
-
-				printf("STAT: xxxxx%d%d%d\n", o, c, z);//printa as flags OCZ = xxxxx111
-				return 0;
-				break;
-			
-			default:
-				printf("OPCODE NAO ENCONTRADO: %X, %i", programa[pc].opcode, pc);
-				return 0;
-				break;
-		}
-	}
-
-	return 0;
-}
-
-void jmp(int operando, int *pnt)
-{
-	//move o ponteiro pc counter para o label
-	*pnt = operando++/2;
-}
-
-void accStat(int acc, int *statPnt, int operação)
-{ 
-	*statPnt = 0;	
-
-	//verifica o overflow, carry e zero
-	if(acc == 0)
-		*statPnt = 1;
-	if((acc > 255) || (acc < -256))
-		*statPnt = operação + 2;
-}
+## Possíveis Erros ⚠️
+1. **Arquivo não encontrado**: Certifique-se de que o arquivo `programa.exe` está no mesmo diretório que o executável.
+2. **Divisão por zero**: O opcode `DIV` pode gerar erro se o operando for 0.
+3. **Opcode inválido**: Caso o opcode não seja reconhecido, o programa retorna uma mensagem de erro.
